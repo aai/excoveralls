@@ -58,10 +58,18 @@ defmodule Mix.Tasks.Coveralls do
   end
 
   defp parse_common_options(args, options) do
-    {common_options, _remaining, unknown_args} = OptionParser.parse(args,
-      strict: [umbrella: :boolean, verbose: :boolean, pro: :boolean, parallel: :boolean],
-      aliases: [u: :umbrella, v: :verbose])
-    {unknown_args |> Enum.map(fn({k, _}) -> k end), options ++ common_options}
+    switches = [umbrella: :boolean, verbose: :boolean, pro: :boolean, parallel: :boolean]
+    aliases = [u: :umbrella, v: :verbose]
+    {common_options, _remaining, _invalid} = OptionParser.parse(args, switches: switches, aliases: aliases)
+
+    # Get the remaining args to pass onto cover (but exclude ExCoveralls-specific args)
+    # Not using OptionParser for this because it splits things up in unfortunate ways.
+    # NOTE: This works right now because all the switches and aliases are just booleans.
+    supported_switches = Enum.map(Keyword.keys(switches), fn(s) -> "--#{s}" end)
+      ++ Enum.map(Keyword.keys(aliases), fn(s) -> "-#{s}" end)
+    remaining = Enum.reject(args, fn(a) -> Enum.member?(supported_switches, a) end)
+
+    {remaining, options ++ common_options}
   end
 
   defp analyze_sub_apps(options) do
