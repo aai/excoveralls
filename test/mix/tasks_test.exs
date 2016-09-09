@@ -57,6 +57,16 @@ defmodule Mix.Tasks.CoverallsTest do
     assert(called Runner.run("test", ["--cover", "--unknown_arg withvalue", "--second"]))
   end
 
+  test_with_mock "--include remote", Runner, [run: fn(_, _) -> nil end] do
+    Mix.Tasks.Coveralls.run(["--include", "remote"])
+    assert(called Runner.run("test", ["--cover", "--include", "remote"]))
+  end
+
+  test_with_mock "doesn't pass through coveralls args", Runner, [run: fn(_, _) -> nil end] do
+    Mix.Tasks.Coveralls.run(["--include", "remote", "-x", "--unknown", "value", "--verbose", "-u"])
+    assert(called Runner.run("test", ["--cover", "--include", "remote", "-x", "--unknown", "value"]))
+  end
+
   test_with_mock "detail", Runner, [run: fn(_, _) -> nil end] do
     Mix.Tasks.Coveralls.Detail.run([])
     assert(called Runner.run("test", ["--cover"]))
